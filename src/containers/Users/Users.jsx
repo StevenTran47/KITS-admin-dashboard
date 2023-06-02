@@ -1,4 +1,5 @@
 import "../../App.css"
+import EditButton from "../../componets/EditButton/EditButton";
 import React, { useState, useEffect } from "react";
 import { Button, Space, Table, Tag, Modal, Form, Input, Popconfirm, Typography, InputNumber } from 'antd';
 import { useDispatch, useSelector } from 'react-redux'
@@ -28,42 +29,6 @@ const SubmitButton = ({ form }) => {
   );
 };
 
-const EditableCell = ({
-  editing,
-  dataIndex,
-  title,
-  inputType,
-  record,
-  index,
-  id,
-  children,
-  ...restProps
-}) => {
-  const inputNode = inputType === 'number' ? <InputNumber /> : <Input />;
-  return (
-    <td {...restProps}>
-      {editing ? (
-
-        <Form.Item
-          name={dataIndex}
-          style={{
-            margin: 0,
-          }}
-          rules={[
-            {
-              required: true,
-              message: `Please Input ${title}!`,
-            },
-          ]}
-        >
-          {inputNode}
-        </Form.Item>
-      ) : (
-        children
-      )}
-    </td>
-  );
-};
 
 const Users = () => {
   const usersStore = useSelector((state) => state.users);
@@ -74,7 +39,6 @@ const Users = () => {
 
 
   const [form] = Form.useForm();
-
 
 
   const [open, setOpen] = useState(false);
@@ -90,6 +54,8 @@ const Users = () => {
   const handleCancel = () => {
     setOpen(false);
   };
+
+  
   const onFinish = (user) => {
     const newData = [...usersStore.listUser, {
       key: Math.floor(Math.random() * 10000) + 1,
@@ -106,44 +72,7 @@ const Users = () => {
   };
 
 
-  const [editingKey, setEditingKey] = useState('');
-  const isEditing = (record) => record.id === editingKey;
-  const edit = (record) => {
-    form.setFieldsValue({
-      name: '',
-      age: '',
-      address: '',
-      ...record,
-    });
-    setEditingKey(record.id);
-  };
-  const cancel = () => {
-    setEditingKey('');
-  };
-
-  const save = async (record) => {
-    try {
-      const row = await form.validateFields();
-      const newData = [...usersStore.listUser];
-      const index = newData.findIndex((item) => record.id === item.id);
-      if (index > -1) {
-        const item = newData[index];
-        newData.splice(index, 1, {
-          ...item,
-          ...row,
-        });
-        dispatch.users.setListUser(newData);
-        setEditingKey('');
-      } else {
-        newData.push(row);
-        dispatch.users.setListUser(newData);
-        setEditingKey('');
-      }
-    } catch (errInfo) {
-      console.log('Validate Failed:', errInfo);
-    }
-  };
-
+  
   const columns = [
     {
       title: "Name",
@@ -177,49 +106,10 @@ const Users = () => {
       )
     },
 
-    {
-      title: 'Edit',
-      dataIndex: 'Edit',
-      render: (_, record) => {
-        const editable = isEditing(record);
-        return editable ? (
-          <span>
-            <Typography.Link
-              onClick={() => save(record)}
-              style={{
-                marginRight: 8,
-              }}
-            >
-              Save
-            </Typography.Link>
-
-            <a onClick={cancel}>Cancel</a>
-
-          </span>
-        ) : (
-          <Typography.Link disabled={editingKey !== ''} onClick={() => edit(record)}>
-            Edit
-          </Typography.Link>
-        );
-      },
-    },
+    
 
   ];
-  const mergedColumns = columns.map((col) => {
-    if (!col.editable) {
-      return col;
-    }
-    return {
-      ...col,
-      onCell: (record) => ({
-        record,
-        inputType: col.dataIndex === 'age' ? 'number' : 'text',
-        dataIndex: col.dataIndex,
-        title: col.title,
-        editing: isEditing(record),
-      }),
-    };
-  });
+ 
   return (
     <div className="content">
       <div className="users-section">
@@ -228,6 +118,7 @@ const Users = () => {
           <Button type="primary" onClick={showModal}>
             Add users
           </Button>
+
         </Space>
         <Modal
           open={open}
@@ -242,7 +133,7 @@ const Users = () => {
             layout="vertical"
             autoComplete="off"
             onFinish={onFinish}
-            component={false}
+            
 
           >
             <Form.Item
@@ -275,13 +166,9 @@ const Users = () => {
             </Form.Item>
           </Form>
         </Modal>
+
         <Table
-          components={{
-            body: {
-              cell: EditableCell,
-            },
-          }}
-          columns={mergedColumns}
+          columns={columns}
           dataSource={usersStore.listUser} />
       </div>
     </div>
